@@ -14,16 +14,261 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      blockchain_transactions: {
+        Row: {
+          block_number: number
+          created_at: string
+          data: Json
+          id: string
+          related_id: string | null
+          transaction_hash: string
+          transaction_type: string
+          user_id: string | null
+        }
+        Insert: {
+          block_number: number
+          created_at?: string
+          data?: Json
+          id?: string
+          related_id?: string | null
+          transaction_hash: string
+          transaction_type: string
+          user_id?: string | null
+        }
+        Update: {
+          block_number?: number
+          created_at?: string
+          data?: Json
+          id?: string
+          related_id?: string | null
+          transaction_hash?: string
+          transaction_type?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      petition_events: {
+        Row: {
+          blockchain_hash: string | null
+          created_at: string
+          created_by: string
+          current_signatures: number
+          description: string
+          end_time: string
+          id: string
+          start_time: string
+          status: Database["public"]["Enums"]["event_status"]
+          target_signatures: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          blockchain_hash?: string | null
+          created_at?: string
+          created_by: string
+          current_signatures?: number
+          description: string
+          end_time: string
+          id?: string
+          start_time: string
+          status?: Database["public"]["Enums"]["event_status"]
+          target_signatures?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          blockchain_hash?: string | null
+          created_at?: string
+          created_by?: string
+          current_signatures?: number
+          description?: string
+          end_time?: string
+          id?: string
+          start_time?: string
+          status?: Database["public"]["Enums"]["event_status"]
+          target_signatures?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      petition_signatures: {
+        Row: {
+          blockchain_hash: string | null
+          comment: string | null
+          created_at: string
+          id: string
+          petition_id: string
+          user_id: string
+        }
+        Insert: {
+          blockchain_hash?: string | null
+          comment?: string | null
+          created_at?: string
+          id?: string
+          petition_id: string
+          user_id: string
+        }
+        Update: {
+          blockchain_hash?: string | null
+          comment?: string | null
+          created_at?: string
+          id?: string
+          petition_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "petition_signatures_petition_id_fkey"
+            columns: ["petition_id"]
+            isOneToOne: false
+            referencedRelation: "petition_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          full_name: string | null
+          id: string
+          updated_at: string
+          wallet_address: string | null
+        }
+        Insert: {
+          created_at?: string
+          full_name?: string | null
+          id: string
+          updated_at?: string
+          wallet_address?: string | null
+        }
+        Update: {
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+          wallet_address?: string | null
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      votes: {
+        Row: {
+          blockchain_hash: string | null
+          created_at: string
+          id: string
+          user_id: string
+          vote_option: string
+          voting_event_id: string
+        }
+        Insert: {
+          blockchain_hash?: string | null
+          created_at?: string
+          id?: string
+          user_id: string
+          vote_option: string
+          voting_event_id: string
+        }
+        Update: {
+          blockchain_hash?: string | null
+          created_at?: string
+          id?: string
+          user_id?: string
+          vote_option?: string
+          voting_event_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "votes_voting_event_id_fkey"
+            columns: ["voting_event_id"]
+            isOneToOne: false
+            referencedRelation: "voting_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      voting_events: {
+        Row: {
+          blockchain_hash: string | null
+          created_at: string
+          created_by: string
+          description: string
+          end_time: string
+          id: string
+          options: Json
+          start_time: string
+          status: Database["public"]["Enums"]["event_status"]
+          title: string
+          total_votes: number
+          updated_at: string
+        }
+        Insert: {
+          blockchain_hash?: string | null
+          created_at?: string
+          created_by: string
+          description: string
+          end_time: string
+          id?: string
+          options?: Json
+          start_time: string
+          status?: Database["public"]["Enums"]["event_status"]
+          title: string
+          total_votes?: number
+          updated_at?: string
+        }
+        Update: {
+          blockchain_hash?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string
+          end_time?: string
+          id?: string
+          options?: Json
+          start_time?: string
+          status?: Database["public"]["Enums"]["event_status"]
+          title?: string
+          total_votes?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "voter" | "petitioner"
+      event_status: "draft" | "active" | "completed" | "cancelled"
+      vote_choice: "yes" | "no" | "abstain"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +395,10 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "voter", "petitioner"],
+      event_status: ["draft", "active", "completed", "cancelled"],
+      vote_choice: ["yes", "no", "abstain"],
+    },
   },
 } as const

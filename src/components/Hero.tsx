@@ -1,9 +1,28 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Shield, Lock, Zap } from "lucide-react";
+import { ArrowRight, Shield, Lock, Zap, LogOut } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Hero = () => {
+  const { user, signOut } = useAuth();
+  
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+      {/* User profile section */}
+      {user && (
+        <div className="absolute top-4 right-4 flex items-center gap-4 z-20">
+          <span className="text-sm text-muted">Welcome, {user.email}</span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={signOut}
+            className="border-cyber-primary/30 hover:bg-cyber-primary/10"
+          >
+            <LogOut className="w-4 h-4 mr-2" />
+            Sign Out
+          </Button>
+        </div>
+      )}
+      
       {/* Animated background grid */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#0A0E27_1px,transparent_1px),linear-gradient(to_bottom,#0A0E27_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_50%,#000_70%,transparent_110%)]" />
       
