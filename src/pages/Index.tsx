@@ -1,5 +1,6 @@
 import Hero from "@/components/Hero";
 import VotingDashboard from "@/components/VotingDashboard";
+import PetitionDashboard from "@/components/PetitionDashboard";
 import BlockchainStatus from "@/components/BlockchainStatus";
 import Features from "@/components/Features";
 import AIChatbot from "@/components/AIChatbot";
@@ -10,6 +11,7 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <Hero />
       <VotingDashboard />
+      <PetitionDashboard />
       <BlockchainStatus />
       <Features />
       <AIChatbot />

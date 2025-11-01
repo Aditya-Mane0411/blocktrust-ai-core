@@ -2,3 +2,12 @@ project_id = "whecasloajcfyvdwkkoj"
 
 [functions.chat]
 verify_jwt = false
+
+[functions.voting]
+verify_jwt = true
+
+[functions.petition]
+verify_jwt = true
+
+[functions.blockchain-status]
+verify_jwt = false

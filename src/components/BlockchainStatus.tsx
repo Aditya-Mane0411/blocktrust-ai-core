@@ -1,7 +1,30 @@
 import { Card } from "@/components/ui/card";
 import { CheckCircle2, Link2 } from "lucide-react";
+import { useBlockchain } from "@/hooks/useBlockchain";
 
 const BlockchainStatus = () => {
+  const { latestTransaction, stats, loading } = useBlockchain();
+
+  if (loading) {
+    return (
+      <section className="py-20 px-4 bg-cyber-card/30">
+        <div className="container mx-auto max-w-5xl text-center">
+          <p className="text-muted-foreground">Loading blockchain status...</p>
+        </div>
+      </section>
+    );
+  }
+
+  if (!latestTransaction) {
+    return (
+      <section className="py-20 px-4 bg-cyber-card/30">
+        <div className="container mx-auto max-w-5xl text-center">
+          <p className="text-muted-foreground">No blockchain transactions yet</p>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="py-20 px-4 bg-cyber-card/30">
       <div className="container mx-auto max-w-5xl">
@@ -48,18 +71,24 @@ const BlockchainStatus = () => {
               <div className="flex items-center gap-2">
                 <Link2 className="w-4 h-4 text-neon-cyan" />
                 <span className="text-muted-foreground">TxID:</span>
-                <span className="text-foreground font-mono">0x7a...f3d9</span>
+                <span className="text-foreground font-mono text-xs truncate max-w-[200px]">
+                  {latestTransaction.hash}
+                </span>
               </div>
               <span className="px-3 py-1 bg-neon-cyan/20 border border-neon-cyan rounded-full text-neon-cyan font-semibold">
                 Confirmed
               </span>
             </div>
 
+            <div className="text-sm text-muted-foreground">
+              <p>Type: <span className="text-foreground">{latestTransaction.type}</span></p>
+            </div>
+
             {/* Block info */}
             <div className="grid md:grid-cols-3 gap-4 pt-4 border-t border-border">
-              <InfoItem label="Block Height" value="15,847,392" />
-              <InfoItem label="Gas Fee" value="0.00234 ETH" />
-              <InfoItem label="Confirmations" value="12 / 12" />
+              <InfoItem label="Block Height" value={stats?.currentBlockHeight.toLocaleString() || "0"} />
+              <InfoItem label="Gas Fee" value={`${stats?.avgGasFee || "0"} ETH`} />
+              <InfoItem label="Total Transactions" value={stats?.totalTransactions.toString() || "0"} />
             </div>
           </div>
         </Card>
