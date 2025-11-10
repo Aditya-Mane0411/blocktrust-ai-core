@@ -6,6 +6,9 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
+import Templates from "./pages/Templates";
+import Deployments from "./pages/Deployments";
+import Documentation from "./pages/Documentation";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -37,8 +40,46 @@ const App = () => (
         <AuthProvider>
           <Routes>
             <Route path="/auth" element={<Auth />} />
+            <Route path="/templates" element={<Templates />} />
+            <Route path="/deployments" element={<Deployments />} />
+            <Route path="/documentation" element={<Documentation />} />
+            <Route path="/developers" element={<Documentation />} />
+            <Route path="/api-reference" element={<Documentation />} />
+            <Route path="/smart-contracts" element={<Documentation />} />
             <Route
               path="/"
+              element={
+                <ProtectedRoute>
+                  <Index />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/platform"
+              element={
+                <ProtectedRoute>
+                  <Index />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/petitions"
+              element={
+                <ProtectedRoute>
+                  <Index />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/analytics"
+              element={
+                <ProtectedRoute>
+                  <Index />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/ai-assistant"
               element={
                 <ProtectedRoute>
                   <Index />

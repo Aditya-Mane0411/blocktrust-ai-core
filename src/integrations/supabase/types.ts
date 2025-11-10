@@ -47,6 +47,113 @@ export type Database = {
         }
         Relationships: []
       }
+      contract_deployments: {
+        Row: {
+          block_number: number
+          contract_address: string
+          created_at: string
+          deployer_id: string | null
+          deployment_params: Json
+          id: string
+          network_id: string
+          status: string
+          template_id: string
+        }
+        Insert: {
+          block_number: number
+          contract_address: string
+          created_at?: string
+          deployer_id?: string | null
+          deployment_params?: Json
+          id?: string
+          network_id: string
+          status?: string
+          template_id: string
+        }
+        Update: {
+          block_number?: number
+          contract_address?: string
+          created_at?: string
+          deployer_id?: string | null
+          deployment_params?: Json
+          id?: string
+          network_id?: string
+          status?: string
+          template_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_deployments_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "event_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_templates: {
+        Row: {
+          config: Json
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          config?: Json
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          config?: Json
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      ipfs_objects: {
+        Row: {
+          cid: string
+          content: Json
+          content_type: string
+          created_at: string
+          created_by: string | null
+          id: string
+        }
+        Insert: {
+          cid: string
+          content: Json
+          content_type: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+        }
+        Update: {
+          cid?: string
+          content?: Json
+          content_type?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
       petition_events: {
         Row: {
           blockchain_hash: string | null
