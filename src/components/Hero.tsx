@@ -56,13 +56,7 @@ const Hero = () => {
               Launch Platform
               <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
             </Button>
-            <Button 
-              size="lg" 
-              variant="outline"
-              className="border-2 border-neon-magenta text-neon-magenta hover:bg-neon-magenta/10 text-lg px-8 py-6 font-semibold"
-            >
-              View Documentation
-            </Button>
+           
           </div>
 
           {/* Features Grid */}
