@@ -18,8 +18,8 @@ export const Navigation = () => {
             <Link to="/templates">
               <Button variant="ghost" size="sm">Templates</Button>
             </Link>
-            <Link to="/petitions">
-              <Button variant="ghost" size="sm">Petitions</Button>
+            <Link to="/admin">
+              <Button variant="ghost" size="sm">Admin</Button>
             </Link>
             <Link to="/documentation">
               <Button variant="ghost" size="sm">

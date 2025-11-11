@@ -11,3 +11,12 @@ verify_jwt = true
 
 [functions.blockchain-status]
 verify_jwt = false
+
+[functions.template-manager]
+verify_jwt = false
+
+[functions.ipfs]
+verify_jwt = true
+
+[functions.admin]
+verify_jwt = true

@@ -1,0 +1,208 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+serve(async (req) => {
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Verify user authentication
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: 'No authorization header' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const { data: { user }, error: userError } = await supabase.auth.getUser(
+      authHeader.replace('Bearer ', '')
+    );
+
+    if (userError || !user) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Check if user has admin role
+    const { data: roles } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id);
+
+    const isAdmin = roles?.some(r => r.role === 'admin');
+
+    if (!isAdmin) {
+      return new Response(JSON.stringify({ error: 'Admin access required' }), {
+        status: 403,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const url = new URL(req.url);
+    const action = url.searchParams.get('action');
+
+    // GET all events (voting + petitions)
+    if (req.method === 'GET' && action === 'events') {
+      const [votingEvents, petitionEvents] = await Promise.all([
+        supabase.from('voting_events').select('*, profiles(full_name)').order('created_at', { ascending: false }),
+        supabase.from('petition_events').select('*, profiles(full_name)').order('created_at', { ascending: false })
+      ]);
+
+      return new Response(
+        JSON.stringify({
+          voting: votingEvents.data || [],
+          petitions: petitionEvents.data || [],
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // GET event participants
+    if (req.method === 'GET' && action === 'participants') {
+      const eventId = url.searchParams.get('eventId');
+      const eventType = url.searchParams.get('eventType');
+
+      if (!eventId || !eventType) {
+        return new Response(JSON.stringify({ error: 'eventId and eventType required' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      let participants;
+      if (eventType === 'voting') {
+        const { data } = await supabase
+          .from('votes')
+          .select('*, profiles(full_name, wallet_address)')
+          .eq('voting_event_id', eventId)
+          .order('created_at', { ascending: false });
+        participants = data;
+      } else if (eventType === 'petition') {
+        const { data } = await supabase
+          .from('petition_signatures')
+          .select('*, profiles(full_name, wallet_address)')
+          .eq('petition_id', eventId)
+          .order('created_at', { ascending: false });
+        participants = data;
+      }
+
+      return new Response(
+        JSON.stringify({ participants: participants || [] }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // GET blockchain transactions
+    if (req.method === 'GET' && action === 'transactions') {
+      const limit = parseInt(url.searchParams.get('limit') || '50');
+      const { data: transactions } = await supabase
+        .from('blockchain_transactions')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(limit);
+
+      return new Response(
+        JSON.stringify({ transactions: transactions || [] }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // POST create voting event from template
+    if (req.method === 'POST' && action === 'create-voting') {
+      const body = await req.json();
+      const { title, description, options, start_time, end_time, template_id } = body;
+
+      // Create voting event
+      const { data: event, error: eventError } = await supabase
+        .from('voting_events')
+        .insert({
+          title,
+          description,
+          options,
+          start_time,
+          end_time,
+          created_by: user.id,
+          status: 'active'
+        })
+        .select()
+        .single();
+
+      if (eventError) throw eventError;
+
+      // Log blockchain transaction
+      await supabase.from('blockchain_transactions').insert({
+        transaction_hash: `0x${Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('')}`,
+        transaction_type: 'voting_event_created',
+        related_id: event.id,
+        user_id: user.id,
+        data: { title, template_id },
+        block_number: Math.floor(Math.random() * 1000000) + 1000000
+      });
+
+      return new Response(JSON.stringify({ event }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    // POST create petition from template
+    if (req.method === 'POST' && action === 'create-petition') {
+      const body = await req.json();
+      const { title, description, start_time, end_time, target_signatures, template_id } = body;
+
+      const { data: petition, error: petitionError } = await supabase
+        .from('petition_events')
+        .insert({
+          title,
+          description,
+          start_time,
+          end_time,
+          target_signatures: target_signatures || 1000,
+          created_by: user.id,
+          status: 'active'
+        })
+        .select()
+        .single();
+
+      if (petitionError) throw petitionError;
+
+      await supabase.from('blockchain_transactions').insert({
+        transaction_hash: `0x${Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('')}`,
+        transaction_type: 'petition_created',
+        related_id: petition.id,
+        user_id: user.id,
+        data: { title, template_id },
+        block_number: Math.floor(Math.random() * 1000000) + 1000000
+      });
+
+      return new Response(JSON.stringify({ petition }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    return new Response(JSON.stringify({ error: 'Invalid action' }), {
+      status: 400,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+
+  } catch (error: any) {
+    console.error('Admin function error:', error);
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+});

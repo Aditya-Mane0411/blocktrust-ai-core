@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { FileText, Users, Clock, Plus } from "lucide-react";
 import { usePetition } from "@/hooks/usePetition";
 import { useState } from "react";
+import { CreateEventModal } from "@/components/CreateEventModal";
 import {
   Dialog,
   DialogContent,
@@ -11,43 +12,15 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 
 const PetitionDashboard = () => {
-  const { petitions, loading, createPetition, signPetition } = usePetition();
+  const { petitions, loading, signPetition, refetch } = usePetition();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isSignDialogOpen, setIsSignDialogOpen] = useState(false);
   const [selectedPetitionId, setSelectedPetitionId] = useState<string>("");
   const [signComment, setSignComment] = useState("");
-  const [formData, setFormData] = useState({
-    title: "",
-    description: "",
-    start_time: "",
-    end_time: "",
-    target_signatures: "1000",
-  });
-
-  const handleCreatePetition = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      await createPetition({
-        ...formData,
-        target_signatures: parseInt(formData.target_signatures),
-      });
-      setIsCreateDialogOpen(false);
-      setFormData({
-        title: "",
-        description: "",
-        start_time: "",
-        end_time: "",
-        target_signatures: "1000",
-      });
-    } catch (error) {
-      console.error("Failed to create petition:", error);
-    }
-  };
 
   const handleSignPetition = async () => {
     try {
@@ -116,89 +89,22 @@ const PetitionDashboard = () => {
         </div>
 
         <div className="text-center mt-12">
-          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-            <DialogTrigger asChild>
-              <Button
-                size="lg"
-                className="bg-gradient-to-r from-neon-magenta to-neon-purple text-cyber-dark hover:opacity-90 glow-magenta"
-              >
-                <Plus className="w-5 h-5 mr-2" />
-                Create New Petition
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="bg-card border-neon-magenta">
-              <DialogHeader>
-                <DialogTitle>Create Petition</DialogTitle>
-                <DialogDescription>
-                  Create a new blockchain-based petition
-                </DialogDescription>
-              </DialogHeader>
-              <form onSubmit={handleCreatePetition} className="space-y-4">
-                <div>
-                  <Label htmlFor="title">Title</Label>
-                  <Input
-                    id="title"
-                    value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea
-                    id="description"
-                    value={formData.description}
-                    onChange={(e) =>
-                      setFormData({ ...formData, description: e.target.value })
-                    }
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="target_signatures">Target Signatures</Label>
-                  <Input
-                    id="target_signatures"
-                    type="number"
-                    value={formData.target_signatures}
-                    onChange={(e) =>
-                      setFormData({ ...formData, target_signatures: e.target.value })
-                    }
-                    required
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="start_time">Start Time</Label>
-                    <Input
-                      id="start_time"
-                      type="datetime-local"
-                      value={formData.start_time}
-                      onChange={(e) =>
-                        setFormData({ ...formData, start_time: e.target.value })
-                      }
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="end_time">End Time</Label>
-                    <Input
-                      id="end_time"
-                      type="datetime-local"
-                      value={formData.end_time}
-                      onChange={(e) =>
-                        setFormData({ ...formData, end_time: e.target.value })
-                      }
-                      required
-                    />
-                  </div>
-                </div>
-                <Button type="submit" className="w-full">
-                  Create Petition
-                </Button>
-              </form>
-            </DialogContent>
-          </Dialog>
+          <Button
+            size="lg"
+            onClick={() => setIsCreateDialogOpen(true)}
+            className="bg-gradient-to-r from-neon-magenta to-neon-purple text-cyber-dark hover:opacity-90 glow-magenta"
+          >
+            <Plus className="w-5 h-5 mr-2" />
+            Create New Petition
+          </Button>
         </div>
+
+        <CreateEventModal
+          open={isCreateDialogOpen}
+          onOpenChange={setIsCreateDialogOpen}
+          eventType="petition"
+          onSuccess={refetch}
+        />
 
         <Dialog open={isSignDialogOpen} onOpenChange={setIsSignDialogOpen}>
           <DialogContent className="bg-card border-neon-magenta">

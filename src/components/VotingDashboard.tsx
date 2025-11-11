@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Vote, Users, Clock, CheckCircle2, Plus } from "lucide-react";
 import { useVoting } from "@/hooks/useVoting";
 import { useState } from "react";
+import { CreateEventModal } from "@/components/CreateEventModal";
 import {
   Dialog,
   DialogContent,
@@ -11,43 +12,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 
 const VotingDashboard = () => {
-  const { events, loading, createEvent, castVote } = useVoting();
+  const { events, loading, castVote, refetch } = useVoting();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isVoteDialogOpen, setIsVoteDialogOpen] = useState(false);
   const [selectedEventId, setSelectedEventId] = useState<string>("");
-  const [formData, setFormData] = useState({
-    title: "",
-    description: "",
-    options: "",
-    start_time: "",
-    end_time: "",
-  });
-
-  const handleCreateEvent = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      const optionsArray = formData.options.split(",").map((opt) => opt.trim());
-      await createEvent({
-        ...formData,
-        options: optionsArray,
-      });
-      setIsCreateDialogOpen(false);
-      setFormData({
-        title: "",
-        description: "",
-        options: "",
-        start_time: "",
-        end_time: "",
-      });
-    } catch (error) {
-      console.error("Failed to create event:", error);
-    }
-  };
 
   const handleVote = async (option: string) => {
     try {
@@ -113,79 +83,22 @@ const VotingDashboard = () => {
         </div>
 
         <div className="text-center mt-12">
-          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-            <DialogTrigger asChild>
-              <Button
-                size="lg"
-                className="bg-gradient-to-r from-neon-cyan to-neon-purple text-cyber-dark hover:opacity-90 glow-cyan"
-              >
-                <Plus className="w-5 h-5 mr-2" />
-                Create New Voting Event
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="bg-card border-neon-cyan">
-              <DialogHeader>
-                <DialogTitle>Create Voting Event</DialogTitle>
-                <DialogDescription>Create a new blockchain-based voting event</DialogDescription>
-              </DialogHeader>
-              <form onSubmit={handleCreateEvent} className="space-y-4">
-                <div>
-                  <Label htmlFor="title">Title</Label>
-                  <Input
-                    id="title"
-                    value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea
-                    id="description"
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="options">Options (comma-separated)</Label>
-                  <Input
-                    id="options"
-                    placeholder="Yes, No, Abstain"
-                    value={formData.options}
-                    onChange={(e) => setFormData({ ...formData, options: e.target.value })}
-                    required
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="start_time">Start Time</Label>
-                    <Input
-                      id="start_time"
-                      type="datetime-local"
-                      value={formData.start_time}
-                      onChange={(e) => setFormData({ ...formData, start_time: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="end_time">End Time</Label>
-                    <Input
-                      id="end_time"
-                      type="datetime-local"
-                      value={formData.end_time}
-                      onChange={(e) => setFormData({ ...formData, end_time: e.target.value })}
-                      required
-                    />
-                  </div>
-                </div>
-                <Button type="submit" className="w-full">
-                  Create Event
-                </Button>
-              </form>
-            </DialogContent>
-          </Dialog>
+          <Button
+            size="lg"
+            onClick={() => setIsCreateDialogOpen(true)}
+            className="bg-gradient-to-r from-neon-cyan to-neon-purple text-cyber-dark hover:opacity-90 glow-cyan"
+          >
+            <Plus className="w-5 h-5 mr-2" />
+            Create New Voting Event
+          </Button>
         </div>
+
+        <CreateEventModal
+          open={isCreateDialogOpen}
+          onOpenChange={setIsCreateDialogOpen}
+          eventType="voting"
+          onSuccess={refetch}
+        />
 
         <Dialog open={isVoteDialogOpen} onOpenChange={setIsVoteDialogOpen}>
           <DialogContent className="bg-card border-neon-cyan">

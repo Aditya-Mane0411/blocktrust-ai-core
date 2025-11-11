@@ -9,6 +9,7 @@ import Auth from "./pages/Auth";
 import Templates from "./pages/Templates";
 import Deployments from "./pages/Deployments";
 import Documentation from "./pages/Documentation";
+import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -83,6 +84,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Index />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute>
+                  <Admin />
                 </ProtectedRoute>
               }
             />
