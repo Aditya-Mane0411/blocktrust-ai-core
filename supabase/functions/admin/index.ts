@@ -52,11 +52,16 @@ serve(async (req) => {
       });
     }
 
-    const url = new URL(req.url);
-    const action = url.searchParams.get('action');
+    // Parse request body for POST requests
+    let body: any = {};
+    if (req.method === 'POST') {
+      body = await req.json();
+    }
 
-    // GET all events (voting + petitions)
-    if (req.method === 'GET' && action === 'events') {
+    const action = body.action || 'events';
+
+    // GET/POST all events (voting + petitions)
+    if (action === 'events') {
       const [votingEvents, petitionEvents] = await Promise.all([
         supabase.from('voting_events').select('*, profiles(full_name)').order('created_at', { ascending: false }),
         supabase.from('petition_events').select('*, profiles(full_name)').order('created_at', { ascending: false })
@@ -71,10 +76,10 @@ serve(async (req) => {
       );
     }
 
-    // GET event participants
-    if (req.method === 'GET' && action === 'participants') {
-      const eventId = url.searchParams.get('eventId');
-      const eventType = url.searchParams.get('eventType');
+    // GET/POST event participants
+    if (action === 'participants') {
+      const eventId = body.eventId;
+      const eventType = body.eventType;
 
       if (!eventId || !eventType) {
         return new Response(JSON.stringify({ error: 'eventId and eventType required' }), {
@@ -106,9 +111,9 @@ serve(async (req) => {
       );
     }
 
-    // GET blockchain transactions
-    if (req.method === 'GET' && action === 'transactions') {
-      const limit = parseInt(url.searchParams.get('limit') || '50');
+    // GET/POST blockchain transactions
+    if (action === 'transactions') {
+      const limit = 50;
       const { data: transactions } = await supabase
         .from('blockchain_transactions')
         .select('*')
@@ -121,9 +126,42 @@ serve(async (req) => {
       );
     }
 
+    // DELETE event
+    if (action === 'delete-event' && req.method === 'POST') {
+      const { eventId, eventType } = body;
+
+      if (!eventId || !eventType) {
+        return new Response(JSON.stringify({ error: 'eventId and eventType required' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      let deleteResult;
+      if (eventType === 'voting') {
+        deleteResult = await supabase
+          .from('voting_events')
+          .delete()
+          .eq('id', eventId);
+      } else if (eventType === 'petition') {
+        deleteResult = await supabase
+          .from('petition_events')
+          .delete()
+          .eq('id', eventId);
+      }
+
+      if (deleteResult?.error) {
+        throw deleteResult.error;
+      }
+
+      return new Response(
+        JSON.stringify({ success: true }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     // POST create voting event from template
     if (req.method === 'POST' && action === 'create-voting') {
-      const body = await req.json();
       const { title, description, options, start_time, end_time, template_id } = body;
 
       // Create voting event
@@ -160,7 +198,6 @@ serve(async (req) => {
 
     // POST create petition from template
     if (req.method === 'POST' && action === 'create-petition') {
-      const body = await req.json();
       const { title, description, start_time, end_time, target_signatures, template_id } = body;
 
       const { data: petition, error: petitionError } = await supabase
@@ -195,14 +232,14 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({ error: 'Invalid action' }), {
       status: 400,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
 
   } catch (error: any) {
     console.error('Admin function error:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ error: error.message || 'Internal server error' }), {
       status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
   }
 });

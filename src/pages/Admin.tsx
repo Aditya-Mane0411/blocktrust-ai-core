@@ -66,8 +66,7 @@ const Admin = () => {
 
       // Fetch events
       const { data: eventsData, error: eventsError } = await supabase.functions.invoke('admin', {
-        body: {},
-        method: 'GET',
+        body: { action: 'events' }
       });
 
       if (eventsError) throw eventsError;
@@ -76,8 +75,8 @@ const Admin = () => {
       setPetitionEvents(eventsData?.petitions || []);
 
       // Fetch transactions
-      const { data: txData, error: txError } = await supabase.functions.invoke('admin?action=transactions', {
-        method: 'GET',
+      const { data: txData, error: txError } = await supabase.functions.invoke('admin', {
+        body: { action: 'transactions' }
       });
 
       if (txError) throw txError;
@@ -93,10 +92,9 @@ const Admin = () => {
 
   const fetchParticipants = async (eventId: string, eventType: 'voting' | 'petition') => {
     try {
-      const { data, error } = await supabase.functions.invoke(
-        `admin?action=participants&eventId=${eventId}&eventType=${eventType}`,
-        { method: 'GET' }
-      );
+      const { data, error } = await supabase.functions.invoke('admin', {
+        body: { action: 'participants', eventId, eventType }
+      });
 
       if (error) throw error;
       setParticipants(data?.participants || []);
@@ -105,6 +103,23 @@ const Admin = () => {
     } catch (error: any) {
       console.error('Error fetching participants:', error);
       toast.error('Failed to load participants');
+    }
+  };
+
+  const deleteEvent = async (eventId: string, eventType: 'voting' | 'petition') => {
+    if (!confirm(`Are you sure you want to delete this ${eventType} event?`)) return;
+    
+    try {
+      const { error } = await supabase.functions.invoke('admin', {
+        body: { action: 'delete-event', eventId, eventType }
+      });
+
+      if (error) throw error;
+      toast.success('Event deleted successfully');
+      fetchAdminData();
+    } catch (error: any) {
+      console.error('Error deleting event:', error);
+      toast.error('Failed to delete event');
     }
   };
 
@@ -223,12 +238,20 @@ const Admin = () => {
                         <TableCell>{formatDate(event.start_time)}</TableCell>
                         <TableCell>{formatDate(event.end_time)}</TableCell>
                         <TableCell>
-                          <button
-                            onClick={() => fetchParticipants(event.id, 'voting')}
-                            className="text-neon-cyan hover:underline"
-                          >
-                            View Participants
-                          </button>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => fetchParticipants(event.id, 'voting')}
+                              className="text-neon-cyan hover:underline text-sm"
+                            >
+                              View
+                            </button>
+                            <button
+                              onClick={() => deleteEvent(event.id, 'voting')}
+                              className="text-red-500 hover:underline text-sm"
+                            >
+                              Delete
+                            </button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -280,12 +303,20 @@ const Admin = () => {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <button
-                            onClick={() => fetchParticipants(event.id, 'petition')}
-                            className="text-neon-magenta hover:underline"
-                          >
-                            View Signatures
-                          </button>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => fetchParticipants(event.id, 'petition')}
+                              className="text-neon-magenta hover:underline text-sm"
+                            >
+                              View
+                            </button>
+                            <button
+                              onClick={() => deleteEvent(event.id, 'petition')}
+                              className="text-red-500 hover:underline text-sm"
+                            >
+                              Delete
+                            </button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}

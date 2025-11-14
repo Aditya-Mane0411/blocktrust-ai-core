@@ -111,7 +111,8 @@ export function AIChatbot() {
     return (
       <Button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-8 right-8 w-16 h-16 rounded-full bg-gradient-primary shadow-lg z-50"
+        className="fixed bottom-8 right-8 w-16 h-16 rounded-full bg-gradient-primary shadow-lg hover:scale-110 transition-transform z-50"
+        aria-label="Open AI Chatbot"
       >
         <MessageCircle className="w-8 h-8" />
       </Button>

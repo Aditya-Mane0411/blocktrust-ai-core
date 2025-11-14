@@ -3,14 +3,14 @@ import { ArrowRight, Shield, Lock, Zap, LogOut } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
 const Hero = () => {
-  const { user, signOut } = useAuth();
+  const { user, userProfile, signOut } = useAuth();
 
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* User profile section */}
-      {user && (
+      {user && userProfile && (
         <div className="absolute top-4 right-4 flex items-center gap-4 z-20">
-          <span className="text-sm ">Welcome, {user.full_name}</span>
+          <span className="text-sm ">Welcome, {userProfile.full_name || userProfile.username || 'User'}</span>
           <Button
             variant="outline"
             size="sm"
@@ -50,6 +50,7 @@ const Hero = () => {
             <Button
               size="lg"
               className="bg-neon-cyan text-cyber-dark hover:bg-neon-cyan/90 glow-cyan group text-lg px-8 py-6 font-semibold"
+              onClick={() => window.location.href = user ? '/templates' : '/auth'}
             >
               Launch Platform
               <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
