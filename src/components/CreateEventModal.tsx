@@ -7,7 +7,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Calendar, Plus, X } from "lucide-react";
+import { Calendar, Plus, X, Clock } from "lucide-react";
+import { format } from "date-fns";
 
 interface Template {
   id: string;
@@ -34,12 +35,29 @@ export const CreateEventModal = ({ open, onOpenChange, eventType, onSuccess }: C
   const [options, setOptions] = useState<string[]>(["", ""]);
   const [targetSignatures, setTargetSignatures] = useState(1000);
   const [loading, setLoading] = useState(false);
+  const [dateTimeError, setDateTimeError] = useState("");
 
   useEffect(() => {
     if (open) {
       fetchTemplates();
     }
   }, [open, eventType]);
+
+  // Validate date/time whenever they change
+  useEffect(() => {
+    if (startTime && endTime) {
+      const start = new Date(startTime);
+      const end = new Date(endTime);
+      
+      if (end <= start) {
+        setDateTimeError("End time must be after start time");
+      } else {
+        setDateTimeError("");
+      }
+    } else {
+      setDateTimeError("");
+    }
+  }, [startTime, endTime]);
 
   const fetchTemplates = async () => {
     try {
@@ -89,6 +107,21 @@ export const CreateEventModal = ({ open, onOpenChange, eventType, onSuccess }: C
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validate dates before submission
+    if (dateTimeError) {
+      toast.error(dateTimeError);
+      return;
+    }
+
+    const start = new Date(startTime);
+    const end = new Date(endTime);
+    
+    if (end <= start) {
+      toast.error("End time must be after start time");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -256,36 +289,48 @@ export const CreateEventModal = ({ open, onOpenChange, eventType, onSuccess }: C
           )}
 
           {/* Time Range */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="start" className="text-neon-cyan flex items-center gap-2">
-                <Calendar className="h-4 w-4" />
-                Start Time *
-              </Label>
-              <Input
-                id="start"
-                type="datetime-local"
-                value={startTime}
-                onChange={(e) => setStartTime(e.target.value)}
-                className="bg-deep-navy/50 border-neon-cyan/20 text-black [&::-webkit-calendar-picker-indicator]:invert"
-                required
-              />
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="start" className="text-neon-cyan flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  Start Time *
+                </Label>
+                <Input
+                  id="start"
+                  type="datetime-local"
+                  value={startTime}
+                  onChange={(e) => setStartTime(e.target.value)}
+                  className="bg-deep-navy/50 border-neon-cyan/20 text-black [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+                  required
+                  min={format(new Date(), "yyyy-MM-dd'T'HH:mm")}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="end" className="text-neon-cyan flex items-center gap-2">
+                  <Clock className="h-4 w-4" />
+                  End Time *
+                </Label>
+                <Input
+                  id="end"
+                  type="datetime-local"
+                  value={endTime}
+                  onChange={(e) => setEndTime(e.target.value)}
+                  className="bg-deep-navy/50 border-neon-cyan/20 text-black [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+                  required
+                  min={startTime || format(new Date(), "yyyy-MM-dd'T'HH:mm")}
+                />
+              </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="end" className="text-neon-cyan flex items-center gap-2">
-                <Calendar className="h-4 w-4" />
-                End Time *
-              </Label>
-              <Input
-                id="end"
-                type="datetime-local"
-                value={endTime}
-                onChange={(e) => setEndTime(e.target.value)}
-                className="bg-deep-navy/50 border-neon-cyan/20 text-black [&::-webkit-calendar-picker-indicator]:invert"
-                required
-              />
-            </div>
+            {/* Date/Time Validation Error */}
+            {dateTimeError && (
+              <div className="text-red-500 text-sm bg-red-500/10 border border-red-500/20 rounded p-3 flex items-center gap-2">
+                <X className="h-4 w-4 flex-shrink-0" />
+                <span>{dateTimeError}</span>
+              </div>
+            )}
           </div>
 
           {/* Submit Button */}
@@ -300,7 +345,7 @@ export const CreateEventModal = ({ open, onOpenChange, eventType, onSuccess }: C
             </Button>
             <Button
               type="submit"
-              disabled={loading || !selectedTemplate}
+              disabled={loading || !selectedTemplate || !!dateTimeError}
               className="bg-gradient-to-r from-neon-cyan to-electric-purple hover:opacity-90"
             >
               {loading ? 'Creating...' : `Create ${eventType === 'voting' ? 'Event' : 'Petition'}`}
