@@ -10,7 +10,7 @@ const Hero = () => {
       {/* User profile section */}
       {user && (
         <div className="absolute top-4 right-4 flex items-center gap-4 z-20">
-          <span className="text-sm ">Welcome, {user.email}</span>
+          <span className="text-sm ">Welcome, {user.full_name}</span>
           <Button
             variant="outline"
             size="sm"
