@@ -181,7 +181,7 @@ export const CreateEventModal = ({ open, onOpenChange, eventType, onSuccess }: C
               id="title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="bg-deep-navy/50 border-neon-cyan/20"
+              className="bg-deep-navy/50 border-neon-cyan/20 text-black placeholder:text-gray-500"
               required
               placeholder={`Enter ${eventType} title...`}
             />
@@ -194,7 +194,7 @@ export const CreateEventModal = ({ open, onOpenChange, eventType, onSuccess }: C
               id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="bg-deep-navy/50 border-neon-cyan/20 min-h-[100px]"
+              className="bg-deep-navy/50 border-neon-cyan/20 min-h-[100px] text-black placeholder:text-gray-500"
               required
               placeholder="Describe the purpose and details..."
             />
@@ -209,7 +209,7 @@ export const CreateEventModal = ({ open, onOpenChange, eventType, onSuccess }: C
                   <Input
                     value={option}
                     onChange={(e) => updateOption(index, e.target.value)}
-                    className="bg-deep-navy/50 border-neon-cyan/20"
+                    className="bg-deep-navy/50 border-neon-cyan/20 text-black placeholder:text-gray-500"
                     placeholder={`Option ${index + 1}`}
                     required
                   />
@@ -248,7 +248,7 @@ export const CreateEventModal = ({ open, onOpenChange, eventType, onSuccess }: C
                 type="number"
                 value={targetSignatures}
                 onChange={(e) => setTargetSignatures(parseInt(e.target.value))}
-                className="bg-deep-navy/50 border-neon-cyan/20"
+                className="bg-deep-navy/50 border-neon-cyan/20 text-black"
                 min={1}
                 required
               />
@@ -267,7 +267,7 @@ export const CreateEventModal = ({ open, onOpenChange, eventType, onSuccess }: C
                 type="datetime-local"
                 value={startTime}
                 onChange={(e) => setStartTime(e.target.value)}
-                className="bg-deep-navy/50 border-neon-cyan/20"
+                className="bg-deep-navy/50 border-neon-cyan/20 text-black [&::-webkit-calendar-picker-indicator]:invert"
                 required
               />
             </div>
@@ -282,7 +282,7 @@ export const CreateEventModal = ({ open, onOpenChange, eventType, onSuccess }: C
                 type="datetime-local"
                 value={endTime}
                 onChange={(e) => setEndTime(e.target.value)}
-                className="bg-deep-navy/50 border-neon-cyan/20"
+                className="bg-deep-navy/50 border-neon-cyan/20 text-black [&::-webkit-calendar-picker-indicator]:invert"
                 required
               />
             </div>
