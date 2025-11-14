@@ -160,6 +160,40 @@ serve(async (req) => {
       );
     }
 
+    // CHANGE event status
+    if (action === 'change-status' && req.method === 'POST') {
+      const { eventId, eventType, status } = body;
+
+      if (!eventId || !eventType || !status) {
+        return new Response(JSON.stringify({ error: 'eventId, eventType, and status required' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      let updateResult;
+      if (eventType === 'voting') {
+        updateResult = await supabase
+          .from('voting_events')
+          .update({ status })
+          .eq('id', eventId);
+      } else if (eventType === 'petition') {
+        updateResult = await supabase
+          .from('petition_events')
+          .update({ status })
+          .eq('id', eventId);
+      }
+
+      if (updateResult?.error) {
+        throw updateResult.error;
+      }
+
+      return new Response(
+        JSON.stringify({ success: true }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     // POST create voting event from template
     if (req.method === 'POST' && action === 'create-voting') {
       const { title, description, options, start_time, end_time, template_id } = body;

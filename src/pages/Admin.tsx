@@ -167,6 +167,39 @@ const Admin = () => {
     }
   };
 
+  const changeEventStatus = async (
+    eventId: string, 
+    eventType: 'voting' | 'petition', 
+    newStatus: string,
+    currentStatus: string
+  ) => {
+    // Validation checks
+    if (currentStatus === 'completed' || currentStatus === 'cancelled') {
+      toast.error(`Cannot change status of ${currentStatus} events`);
+      return;
+    }
+
+    if (newStatus === 'active' && currentStatus !== 'draft') {
+      toast.error('Only draft events can be activated');
+      return;
+    }
+
+    if (!confirm(`Change event status to "${newStatus}"?`)) return;
+    
+    try {
+      const { error } = await supabase.functions.invoke('admin', {
+        body: { action: 'change-status', eventId, eventType, status: newStatus }
+      });
+
+      if (error) throw error;
+      toast.success(`Event status changed to ${newStatus}`);
+      fetchAdminData();
+    } catch (error: any) {
+      console.error('Error changing status:', error);
+      toast.error('Failed to change event status');
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     const variants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
       active: "default",
@@ -282,19 +315,32 @@ const Admin = () => {
                         <TableCell>{formatDate(event.start_time)}</TableCell>
                         <TableCell>{formatDate(event.end_time)}</TableCell>
                         <TableCell>
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => fetchParticipants(event.id, 'voting')}
-                              className="text-neon-cyan hover:underline text-sm"
+                          <div className="flex flex-col gap-1">
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => fetchParticipants(event.id, 'voting')}
+                                className="text-neon-cyan hover:underline text-sm"
+                              >
+                                View
+                              </button>
+                              <button
+                                onClick={() => deleteEvent(event.id, 'voting')}
+                                className="text-red-500 hover:underline text-sm"
+                              >
+                                Delete
+                              </button>
+                            </div>
+                            <select
+                              value={event.status}
+                              onChange={(e) => changeEventStatus(event.id, 'voting', e.target.value, event.status)}
+                              className="text-xs bg-deep-navy/80 border border-neon-cyan/20 text-gray-300 rounded px-2 py-1"
+                              disabled={event.status === 'completed' || event.status === 'cancelled'}
                             >
-                              View
-                            </button>
-                            <button
-                              onClick={() => deleteEvent(event.id, 'voting')}
-                              className="text-red-500 hover:underline text-sm"
-                            >
-                              Delete
-                            </button>
+                              <option value="draft">Draft</option>
+                              <option value="active">Active</option>
+                              <option value="completed">Completed</option>
+                              <option value="cancelled">Cancelled</option>
+                            </select>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -347,19 +393,32 @@ const Admin = () => {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => fetchParticipants(event.id, 'petition')}
-                              className="text-neon-magenta hover:underline text-sm"
+                          <div className="flex flex-col gap-1">
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => fetchParticipants(event.id, 'petition')}
+                                className="text-neon-magenta hover:underline text-sm"
+                              >
+                                View
+                              </button>
+                              <button
+                                onClick={() => deleteEvent(event.id, 'petition')}
+                                className="text-red-500 hover:underline text-sm"
+                              >
+                                Delete
+                              </button>
+                            </div>
+                            <select
+                              value={event.status}
+                              onChange={(e) => changeEventStatus(event.id, 'petition', e.target.value, event.status)}
+                              className="text-xs bg-deep-navy/80 border border-neon-cyan/20 text-gray-300 rounded px-2 py-1"
+                              disabled={event.status === 'completed' || event.status === 'cancelled'}
                             >
-                              View
-                            </button>
-                            <button
-                              onClick={() => deleteEvent(event.id, 'petition')}
-                              className="text-red-500 hover:underline text-sm"
-                            >
-                              Delete
-                            </button>
+                              <option value="draft">Draft</option>
+                              <option value="active">Active</option>
+                              <option value="completed">Completed</option>
+                              <option value="cancelled">Cancelled</option>
+                            </select>
                           </div>
                         </TableCell>
                       </TableRow>
