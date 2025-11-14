@@ -13,10 +13,10 @@ serve(async (req) => {
   }
 
   try {
+    // Create client with ANON_KEY to validate user JWT
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
-
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+    
     // Verify user authentication
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
@@ -26,16 +26,23 @@ serve(async (req) => {
       });
     }
 
-    const { data: { user }, error: userError } = await supabase.auth.getUser(
-      authHeader.replace('Bearer ', '')
-    );
+    // Use ANON_KEY client to validate JWT
+    const authClient = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } }
+    });
+
+    const { data: { user }, error: userError } = await authClient.auth.getUser();
 
     if (userError || !user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      return new Response(JSON.stringify({ error: 'Unauthorized', details: userError?.message }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
+
+    // Create SERVICE_ROLE client for admin operations (bypasses RLS)
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Check if user has admin role
     const { data: roles } = await supabase
