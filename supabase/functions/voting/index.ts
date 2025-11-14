@@ -63,8 +63,15 @@ serve(async (req) => {
     let action: string | null = null;
     
     if (req.method === "POST") {
-      body = await req.json();
-      action = body.action;
+      try {
+        const text = await req.text();
+        if (text && text.trim()) {
+          body = JSON.parse(text);
+          action = body.action;
+        }
+      } catch (e) {
+        console.log('No valid JSON body provided, treating as GET request');
+      }
     }
 
     // GET: Fetch voting events
