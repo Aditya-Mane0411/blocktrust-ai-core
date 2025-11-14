@@ -4,13 +4,13 @@ import { useAuth } from "@/contexts/AuthContext";
 
 const Hero = () => {
   const { user, signOut } = useAuth();
-  
+
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* User profile section */}
       {user && (
         <div className="absolute top-4 right-4 flex items-center gap-4 z-20">
-          <span className="text-sm text-muted">Welcome, {user.email}</span>
+          <span className="text-sm ">Welcome, {user.email}</span>
           <Button
             variant="outline"
             size="sm"
@@ -22,10 +22,10 @@ const Hero = () => {
           </Button>
         </div>
       )}
-      
+
       {/* Animated background grid */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#0A0E27_1px,transparent_1px),linear-gradient(to_bottom,#0A0E27_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_50%,#000_70%,transparent_110%)]" />
-      
+
       <div className="container mx-auto px-4 relative z-10">
         <div className="max-w-5xl mx-auto text-center space-y-8">
           {/* Logo/Brand */}
@@ -37,26 +37,23 @@ const Hero = () => {
           </div>
 
           {/* Tagline */}
-          <p className="text-2xl md:text-4xl font-light text-foreground/90">
-            Web 3.0 Blockchain-as-a-Service Platform
-          </p>
+          <p className="text-2xl md:text-4xl font-light text-foreground/90">Web 3.0 Blockchain-as-a-Service Platform</p>
 
           {/* Description */}
           <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-            Secure, transparent, and intelligent blockchain solutions for voting, petitions, and governance.
-            Powered by AI and built on the foundation of Web 3.0 technology.
+            Secure, transparent, and intelligent blockchain solutions for voting, petitions, and governance. Powered by
+            AI and built on the foundation of Web 3.0 technology.
           </p>
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">
-            <Button 
-              size="lg" 
+            <Button
+              size="lg"
               className="bg-neon-cyan text-cyber-dark hover:bg-neon-cyan/90 glow-cyan group text-lg px-8 py-6 font-semibold"
             >
               Launch Platform
               <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
             </Button>
-           
           </div>
 
           {/* Features Grid */}
@@ -86,26 +83,27 @@ const Hero = () => {
   );
 };
 
-const FeatureCard = ({ 
-  icon, 
-  title, 
-  description, 
-  color 
-}: { 
-  icon: React.ReactNode; 
-  title: string; 
-  description: string; 
-  color: 'cyan' | 'purple' | 'magenta';
+const FeatureCard = ({
+  icon,
+  title,
+  description,
+  color,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+  color: "cyan" | "purple" | "magenta";
 }) => {
-  const glowClass = color === 'cyan' ? 'glow-cyan' : color === 'purple' ? 'glow-purple' : 'glow-magenta';
-  const borderClass = color === 'cyan' ? 'border-neon-cyan' : color === 'purple' ? 'border-neon-purple' : 'border-neon-magenta';
-  const textClass = color === 'cyan' ? 'text-neon-cyan' : color === 'purple' ? 'text-neon-purple' : 'text-neon-magenta';
+  const glowClass = color === "cyan" ? "glow-cyan" : color === "purple" ? "glow-purple" : "glow-magenta";
+  const borderClass =
+    color === "cyan" ? "border-neon-cyan" : color === "purple" ? "border-neon-purple" : "border-neon-magenta";
+  const textClass = color === "cyan" ? "text-neon-cyan" : color === "purple" ? "text-neon-purple" : "text-neon-magenta";
 
   return (
-    <div className={`bg-card border-2 ${borderClass} rounded-xl p-6 ${glowClass} hover:scale-105 transition-all duration-300`}>
-      <div className={`${textClass} mb-4`}>
-        {icon}
-      </div>
+    <div
+      className={`bg-card border-2 ${borderClass} rounded-xl p-6 ${glowClass} hover:scale-105 transition-all duration-300`}
+    >
+      <div className={`${textClass} mb-4`}>{icon}</div>
       <h3 className="text-xl font-semibold mb-2 text-foreground">{title}</h3>
       <p className="text-muted-foreground text-sm">{description}</p>
     </div>
