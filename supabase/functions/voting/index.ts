@@ -85,15 +85,15 @@ serve(async (req) => {
     // POST: Create voting event or cast vote
     if (req.method === "POST" && action) {
       if (action === "create") {
-        // Check if user has admin role
+        // Check if user has voter or admin role
         const { data: roles } = await supabase
           .from("user_roles")
           .select("role")
           .eq("user_id", user.id);
 
-        const isAdmin = roles?.some((r) => r.role === "admin");
-        if (!isAdmin) {
-          return new Response(JSON.stringify({ error: "Admin access required" }), {
+        const canCreate = roles?.some((r) => r.role === "voter" || r.role === "admin");
+        if (!canCreate) {
+          return new Response(JSON.stringify({ error: "Voter access required to create voting events" }), {
             status: 403,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
