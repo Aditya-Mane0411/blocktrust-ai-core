@@ -22,15 +22,19 @@ serve(async (req) => {
       });
     }
 
-    const token = authHeader.replace('Bearer ', '');
-
     // Create ANON_KEY client to validate JWT token
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
-    const authClient = createClient(supabaseUrl, supabaseAnonKey);
+    const authClient = createClient(supabaseUrl, supabaseAnonKey, {
+      global: {
+        headers: {
+          Authorization: authHeader
+        }
+      }
+    });
 
-    // Validate JWT by passing token explicitly
-    const { data: { user }, error: userError } = await authClient.auth.getUser(token);
+    // Validate JWT using the Authorization header in the client
+    const { data: { user }, error: userError } = await authClient.auth.getUser();
 
     if (userError || !user) {
       return new Response(JSON.stringify({ error: 'Unauthorized', details: userError?.message }), {
