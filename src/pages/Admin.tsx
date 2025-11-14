@@ -58,6 +58,50 @@ const Admin = () => {
 
   useEffect(() => {
     fetchAdminData();
+
+    // Setup realtime subscriptions for auto-updates
+    const votingChannel = supabase
+      .channel('voting_events_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'voting_events' }, () => {
+        fetchAdminData();
+      })
+      .subscribe();
+
+    const petitionChannel = supabase
+      .channel('petition_events_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'petition_events' }, () => {
+        fetchAdminData();
+      })
+      .subscribe();
+
+    const votesChannel = supabase
+      .channel('votes_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'votes' }, () => {
+        fetchAdminData();
+      })
+      .subscribe();
+
+    const signaturesChannel = supabase
+      .channel('signatures_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'petition_signatures' }, () => {
+        fetchAdminData();
+      })
+      .subscribe();
+
+    const transactionsChannel = supabase
+      .channel('transactions_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'blockchain_transactions' }, () => {
+        fetchAdminData();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(votingChannel);
+      supabase.removeChannel(petitionChannel);
+      supabase.removeChannel(votesChannel);
+      supabase.removeChannel(signaturesChannel);
+      supabase.removeChannel(transactionsChannel);
+    };
   }, []);
 
   const fetchAdminData = async () => {
