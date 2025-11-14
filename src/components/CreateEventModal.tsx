@@ -43,16 +43,16 @@ export const CreateEventModal = ({ open, onOpenChange, eventType, onSuccess }: C
 
   const fetchTemplates = async () => {
     try {
-      const { data, error } = await supabase.functions.invoke('template-manager?action=list-templates', {
-        method: 'GET',
-      });
+      // Query database directly for active templates
+      const { data, error } = await supabase
+        .from('event_templates')
+        .select('*')
+        .eq('is_active', true)
+        .eq('type', eventType);
 
       if (error) throw error;
 
-      const filteredTemplates = (data?.templates || []).filter(
-        (t: Template) => t.type === eventType
-      );
-      setTemplates(filteredTemplates);
+      setTemplates(data || []);
     } catch (error: any) {
       console.error('Error fetching templates:', error);
       toast.error('Failed to load templates');

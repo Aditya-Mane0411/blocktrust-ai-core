@@ -3,13 +3,16 @@ import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { BrowserProvider } from "ethers";
 
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
+  walletAddress: string | null;
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
+  signInWithWallet: () => Promise<{ error: any }>;
   signOut: () => Promise<void>;
 }
 
@@ -19,6 +22,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -90,11 +94,70 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const signInWithWallet = async () => {
+    try {
+      if (typeof (window as any).ethereum === 'undefined') {
+        toast.error('Please install MetaMask to use wallet login');
+        return { error: new Error('MetaMask not found') };
+      }
+
+      const provider = new BrowserProvider((window as any).ethereum);
+      const accounts = await provider.send("eth_requestAccounts", []);
+      const address = accounts[0];
+      
+      if (!address) {
+        throw new Error('No wallet address found');
+      }
+
+      setWalletAddress(address);
+
+      // Create a message to sign
+      const message = `Sign this message to authenticate with BlockTrust AI\n\nWallet: ${address}\nTimestamp: ${Date.now()}`;
+      
+      const signer = await provider.getSigner();
+      const signature = await signer.signMessage(message);
+
+      // Use wallet address as a unique identifier for authentication
+      // In production, verify signature on backend
+      const { error } = await supabase.auth.signInWithPassword({
+        email: `${address.toLowerCase()}@wallet.blocktrust.local`,
+        password: signature.substring(0, 32), // Use part of signature as password
+      });
+
+      if (error) {
+        // If user doesn't exist, create account
+        const { error: signUpError } = await supabase.auth.signUp({
+          email: `${address.toLowerCase()}@wallet.blocktrust.local`,
+          password: signature.substring(0, 32),
+          options: {
+            data: {
+              full_name: `Wallet ${address.substring(0, 6)}...${address.substring(38)}`,
+              wallet_address: address,
+            },
+          },
+        });
+
+        if (signUpError) {
+          toast.error(signUpError.message);
+          return { error: signUpError };
+        }
+      }
+
+      toast.success("Connected with wallet successfully!");
+      navigate("/");
+      return { error: null };
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to connect wallet');
+      return { error };
+    }
+  };
+
   const signOut = async () => {
     try {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       
+      setWalletAddress(null);
       toast.success("Signed out successfully!");
       navigate("/auth");
     } catch (error: any) {
@@ -103,7 +166,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, signUp, signIn, signOut }}>
+    <AuthContext.Provider value={{ user, session, loading, walletAddress, signUp, signIn, signInWithWallet, signOut }}>
       {children}
     </AuthContext.Provider>
   );
