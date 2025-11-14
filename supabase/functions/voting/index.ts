@@ -22,10 +22,6 @@ serve(async (req) => {
   }
 
   try {
-    // Create client with ANON_KEY to validate user JWT
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-    
     // Verify user authentication
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
@@ -35,12 +31,15 @@ serve(async (req) => {
       });
     }
 
-    // Use ANON_KEY client to validate JWT
-    const authClient = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader } }
-    });
+    const token = authHeader.replace("Bearer ", "");
 
-    const { data: { user }, error: authError } = await authClient.auth.getUser();
+    // Create ANON_KEY client to validate JWT token
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const authClient = createClient(supabaseUrl, supabaseAnonKey);
+
+    // Validate JWT by passing token explicitly
+    const { data: { user }, error: authError } = await authClient.auth.getUser(token);
     
     if (authError || !user) {
       return new Response(JSON.stringify({ error: "Unauthorized", details: authError?.message }), {
