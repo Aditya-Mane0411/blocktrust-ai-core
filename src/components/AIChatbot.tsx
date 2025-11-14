@@ -11,7 +11,7 @@ type Message = { role: "user" | "assistant"; content: string };
 export function AIChatbot() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
-    { role: "assistant", content: "Hello! I'm your BlockTrust AI assistant. How can I help you today?" }
+    { role: "assistant", content: "Hello! I'm your BlockTrust AI assistant. How can I help you today?" },
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -28,14 +28,14 @@ export function AIChatbot() {
 
     const userMessage = input.trim();
     setInput("");
-    
+
     const newMessages: Message[] = [...messages, { role: "user", content: userMessage }];
     setMessages(newMessages);
     setIsLoading(true);
 
     try {
       const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
-      
+
       const response = await fetch(CHAT_URL, {
         method: "POST",
         headers: {
@@ -59,12 +59,12 @@ export function AIChatbot() {
       let streamDone = false;
 
       // Add empty assistant message
-      setMessages(prev => [...prev, { role: "assistant", content: "" }]);
+      setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
 
       while (!streamDone) {
         const { done, value } = await reader.read();
         if (done) break;
-        
+
         textBuffer += decoder.decode(value, { stream: true });
 
         let newlineIndex: number;
@@ -87,7 +87,7 @@ export function AIChatbot() {
             const content = parsed.choices?.[0]?.delta?.content as string | undefined;
             if (content) {
               assistantContent += content;
-              setMessages(prev => {
+              setMessages((prev) => {
                 const newMsgs = [...prev];
                 newMsgs[newMsgs.length - 1] = { role: "assistant", content: assistantContent };
                 return newMsgs;
@@ -102,7 +102,7 @@ export function AIChatbot() {
     } catch (error: any) {
       console.error("Chat error:", error);
       toast.error(error.message || "Failed to send message");
-      setMessages(prev => prev.slice(0, -1));
+      setMessages((prev) => prev.slice(0, -1));
     } finally {
       setIsLoading(false);
     }
@@ -112,7 +112,7 @@ export function AIChatbot() {
     return (
       <Button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-8 right-8 w-16 h-16 rounded-full bg-gradient-primary hover:opacity-90 transition-all shadow-lg z-50"
+        className="fixed bottom-8 right-8 w-16 h-16 rounded-full bg-gradient-primary shadow-lg z-50"
       >
         <MessageCircle className="w-8 h-8" />
       </Button>
@@ -124,28 +124,20 @@ export function AIChatbot() {
       <Card className="w-96 h-[500px] flex flex-col border-cyber-primary/30 bg-cyber-dark/90 backdrop-blur-sm">
         <div className="p-4 border-b border-cyber-primary/30 flex justify-between items-center">
           <h3 className="font-semibold text-neon-cyan">BlockTrust AI Assistant</h3>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setIsOpen(false)}
-            className="hover:bg-neon-cyan/10"
-          >
+          <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)} className="hover:bg-neon-cyan/10">
             <X className="h-4 w-4" />
           </Button>
         </div>
-        
+
         <ScrollArea className="flex-1 p-4" ref={scrollRef}>
           <div className="space-y-4">
             {messages.map((msg, idx) => (
-              <div
-                key={idx}
-                className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
+              <div key={idx} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
                 <div
                   className={`max-w-[80%] p-3 rounded-lg ${
-                    msg.role === 'user'
-                      ? 'bg-gradient-primary text-white'
-                      : 'bg-cyber-primary/20 text-foreground border border-cyber-primary/30'
+                    msg.role === "user"
+                      ? "bg-gradient-primary text-white"
+                      : "bg-cyber-primary/20 text-foreground border border-cyber-primary/30"
                   }`}
                 >
                   {msg.content}
@@ -165,22 +157,18 @@ export function AIChatbot() {
             )}
           </div>
         </ScrollArea>
-        
+
         <div className="p-4 border-t border-cyber-primary/30">
           <div className="flex gap-2">
             <Input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && !isLoading && handleSend()}
+              onKeyPress={(e) => e.key === "Enter" && !isLoading && handleSend()}
               placeholder="Ask about voting, petitions, or security..."
               className="bg-background/50 border-cyber-primary/30 focus:border-neon-cyan"
               disabled={isLoading}
             />
-            <Button
-              onClick={handleSend}
-              className="bg-gradient-primary hover:opacity-90"
-              disabled={isLoading}
-            >
+            <Button onClick={handleSend} className="bg-gradient-primary hover:opacity-90" disabled={isLoading}>
               <Send className="h-4 w-4" />
             </Button>
           </div>
