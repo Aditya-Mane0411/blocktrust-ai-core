@@ -4,7 +4,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
-import { Shield, Lock, Mail, User } from "lucide-react";
+import { Shield, Lock, Mail, User, Wallet } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
@@ -12,7 +13,8 @@ export default function Auth() {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(false);
-  const { signIn, signUp } = useAuth();
+  const [walletLoading, setWalletLoading] = useState(false);
+  const { signIn, signUp, signInWithWallet } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,6 +27,12 @@ export default function Auth() {
     }
 
     setLoading(false);
+  };
+
+  const handleWalletConnect = async () => {
+    setWalletLoading(true);
+    await signInWithWallet();
+    setWalletLoading(false);
   };
 
   return (
@@ -120,6 +128,24 @@ export default function Auth() {
                 {loading ? "Processing..." : isLogin ? "Sign In" : "Create Account"}
               </Button>
             </form>
+
+            <div className="relative my-6">
+              <Separator />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="bg-cyber-dark/50 px-2 text-sm text-muted">or</span>
+              </div>
+            </div>
+
+            <Button
+              type="button"
+              onClick={handleWalletConnect}
+              variant="outline"
+              className="w-full border-neon-cyan/30 hover:bg-neon-cyan/10 hover:border-neon-cyan transition-all"
+              disabled={walletLoading}
+            >
+              <Wallet className="mr-2 h-4 w-4 text-neon-cyan" />
+              {walletLoading ? "Connecting..." : "Connect with MetaMask"}
+            </Button>
 
             <div className="mt-6 text-center">
               <button
