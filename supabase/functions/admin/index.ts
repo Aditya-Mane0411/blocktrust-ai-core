@@ -16,32 +16,34 @@ serve(async (req) => {
     // Verify user authentication
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
+      console.error('No authorization header provided');
       return new Response(JSON.stringify({ error: 'No authorization header' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
+    const token = authHeader.replace('Bearer ', '');
+    
     // Create ANON_KEY client to validate JWT token
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
-    const authClient = createClient(supabaseUrl, supabaseAnonKey, {
-      global: {
-        headers: {
-          Authorization: authHeader
-        }
-      }
-    });
+    const authClient = createClient(supabaseUrl, supabaseAnonKey);
 
-    // Validate JWT using the Authorization header in the client
-    const { data: { user }, error: userError } = await authClient.auth.getUser();
+    // Validate JWT by passing token directly (required for edge functions)
+    const { data: { user }, error: userError } = await authClient.auth.getUser(token);
+    
+    console.log('Auth result:', { userId: user?.id, hasError: !!userError, errorMsg: userError?.message });
 
     if (userError || !user) {
+      console.error('User validation failed:', userError?.message);
       return new Response(JSON.stringify({ error: 'Unauthorized', details: userError?.message }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
+    
+    console.log('User authenticated successfully:', user.id);
 
     // Create SERVICE_ROLE client for admin operations (bypasses RLS)
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -54,8 +56,10 @@ serve(async (req) => {
       .eq('user_id', user.id);
 
     const isAdmin = roles?.some(r => r.role === 'admin');
+    console.log('User roles check:', { roles: roles?.map(r => r.role), isAdmin });
 
     if (!isAdmin) {
+      console.error('User is not admin:', user.id);
       return new Response(JSON.stringify({ error: 'Admin access required' }), {
         status: 403,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

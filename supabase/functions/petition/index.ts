@@ -24,32 +24,34 @@ serve(async (req) => {
     // Verify user authentication
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
+      console.error('No authorization header');
       return new Response(JSON.stringify({ error: "No authorization header" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
+    const token = authHeader.replace("Bearer ", "");
+
     // Create ANON_KEY client to validate JWT token
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-    const authClient = createClient(supabaseUrl, supabaseAnonKey, {
-      global: {
-        headers: {
-          Authorization: authHeader
-        }
-      }
-    });
+    const authClient = createClient(supabaseUrl, supabaseAnonKey);
 
-    // Validate JWT using the Authorization header in the client
-    const { data: { user }, error: authError } = await authClient.auth.getUser();
+    // Validate JWT by passing token directly (required for edge functions)
+    const { data: { user }, error: authError } = await authClient.auth.getUser(token);
+    
+    console.log('Petition auth:', { userId: user?.id, error: authError?.message });
     
     if (authError || !user) {
+      console.error('Auth failed:', authError?.message);
       return new Response(JSON.stringify({ error: "Unauthorized", details: authError?.message }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    
+    console.log('User authenticated:', user.id);
 
     // Create SERVICE_ROLE client for database operations (bypasses RLS)
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
