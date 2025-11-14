@@ -9,6 +9,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Calendar, Plus, X, Clock } from "lucide-react";
 import { format } from "date-fns";
+import { useVoting } from "@/hooks/useVoting";
+import { usePetition } from "@/hooks/usePetition";
 
 interface Template {
   id: string;
@@ -26,6 +28,8 @@ interface CreateEventModalProps {
 }
 
 export const CreateEventModal = ({ open, onOpenChange, eventType, onSuccess }: CreateEventModalProps) => {
+  const { createEvent: createVotingEvent } = useVoting();
+  const { createPetition } = usePetition();
   const [templates, setTemplates] = useState<Template[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState<string>("");
   const [title, setTitle] = useState("");
@@ -125,34 +129,24 @@ export const CreateEventModal = ({ open, onOpenChange, eventType, onSuccess }: C
     setLoading(true);
 
     try {
-      const action = eventType === 'voting' ? 'create-voting' : 'create-petition';
-      
-      const body = eventType === 'voting' 
-        ? {
-            title,
-            description,
-            options: options.filter(o => o.trim() !== ""),
-            start_time: startTime,
-            end_time: endTime,
-            template_id: selectedTemplate
-          }
-        : {
-            title,
-            description,
-            start_time: startTime,
-            end_time: endTime,
-            target_signatures: targetSignatures,
-            template_id: selectedTemplate
-          };
+      if (eventType === 'voting') {
+        await createVotingEvent({
+          title,
+          description,
+          options: options.filter(o => o.trim() !== ""),
+          start_time: startTime,
+          end_time: endTime,
+        });
+      } else {
+        await createPetition({
+          title,
+          description,
+          start_time: startTime,
+          end_time: endTime,
+          target_signatures: targetSignatures,
+        });
+      }
 
-      const { data, error } = await supabase.functions.invoke(`admin?action=${action}`, {
-        method: 'POST',
-        body,
-      });
-
-      if (error) throw error;
-
-      toast.success(`${eventType === 'voting' ? 'Voting event' : 'Petition'} created successfully!`);
       onOpenChange(false);
       onSuccess();
       
@@ -166,7 +160,7 @@ export const CreateEventModal = ({ open, onOpenChange, eventType, onSuccess }: C
       setSelectedTemplate("");
     } catch (error: any) {
       console.error(`Error creating ${eventType}:`, error);
-      toast.error(error.message || `Failed to create ${eventType}`);
+      // Toast already shown by hooks
     } finally {
       setLoading(false);
     }
