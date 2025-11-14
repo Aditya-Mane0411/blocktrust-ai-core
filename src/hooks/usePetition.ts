@@ -21,9 +21,7 @@ export const usePetition = () => {
 
   const fetchPetitions = async () => {
     try {
-      const { data, error } = await supabase.functions.invoke("petition", {
-        method: "GET",
-      });
+      const { data, error } = await supabase.functions.invoke("petition");
 
       if (error) throw error;
       setPetitions(data.petitions || []);
@@ -43,9 +41,8 @@ export const usePetition = () => {
     target_signatures?: number;
   }) => {
     try {
-      const { data, error } = await supabase.functions.invoke("petition?action=create", {
-        method: "POST",
-        body: petitionData,
+      const { data, error } = await supabase.functions.invoke("petition", {
+        body: { action: "create", ...petitionData },
       });
 
       if (error) throw error;
@@ -61,9 +58,9 @@ export const usePetition = () => {
 
   const signPetition = async (petitionId: string, comment?: string) => {
     try {
-      const { data, error } = await supabase.functions.invoke("petition?action=sign", {
-        method: "POST",
+      const { data, error } = await supabase.functions.invoke("petition", {
         body: {
+          action: "sign",
           petition_id: petitionId,
           comment,
         },
