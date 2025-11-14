@@ -58,7 +58,6 @@ export function AIChatbot() {
       let assistantContent = "";
       let streamDone = false;
 
-      // Add empty assistant message
       setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
 
       while (!streamDone) {
@@ -124,7 +123,7 @@ export function AIChatbot() {
       <Card className="w-96 h-[500px] flex flex-col border-cyber-primary/30 bg-cyber-dark/90 backdrop-blur-sm">
         <div className="p-4 border-b border-cyber-primary/30 flex justify-between items-center">
           <h3 className="font-semibold text-neon-cyan">BlockTrust AI Assistant</h3>
-          <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)} className="hover:bg-neon-cyan/10">
+          <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)}>
             <X className="h-4 w-4" />
           </Button>
         </div>
@@ -168,7 +167,7 @@ export function AIChatbot() {
               className="bg-background/50 border-cyber-primary/30 focus:border-neon-cyan"
               disabled={isLoading}
             />
-            <Button onClick={handleSend} className="bg-gradient-primary hover:opacity-90" disabled={isLoading}>
+            <Button onClick={handleSend} disabled={isLoading} className="bg-gradient-primary">
               <Send className="h-4 w-4" />
             </Button>
           </div>
