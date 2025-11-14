@@ -58,11 +58,17 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const url = new URL(req.url);
-    const action = url.searchParams.get("action");
+    // Parse request body
+    let body: any = {};
+    let action: string | null = null;
+    
+    if (req.method === "POST") {
+      body = await req.json();
+      action = body.action;
+    }
 
     // GET: Fetch voting events
-    if (req.method === "GET") {
+    if (req.method === "GET" || !action) {
       const { data: events, error } = await supabase
         .from("voting_events")
         .select("*")
@@ -77,9 +83,7 @@ serve(async (req) => {
     }
 
     // POST: Create voting event or cast vote
-    if (req.method === "POST") {
-      const body = await req.json();
-
+    if (req.method === "POST" && action) {
       if (action === "create") {
         // Check if user has admin role
         const { data: roles } = await supabase

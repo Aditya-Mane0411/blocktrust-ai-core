@@ -21,9 +21,7 @@ export const useVoting = () => {
 
   const fetchEvents = async () => {
     try {
-      const { data, error } = await supabase.functions.invoke("voting", {
-        method: "GET",
-      });
+      const { data, error } = await supabase.functions.invoke("voting");
 
       if (error) throw error;
       setEvents(data.events || []);
@@ -43,9 +41,8 @@ export const useVoting = () => {
     end_time: string;
   }) => {
     try {
-      const { data, error } = await supabase.functions.invoke("voting?action=create", {
-        method: "POST",
-        body: eventData,
+      const { data, error } = await supabase.functions.invoke("voting", {
+        body: { action: "create", ...eventData },
       });
 
       if (error) throw error;
@@ -61,9 +58,9 @@ export const useVoting = () => {
 
   const castVote = async (votingEventId: string, voteOption: string) => {
     try {
-      const { data, error } = await supabase.functions.invoke("voting?action=vote", {
-        method: "POST",
+      const { data, error } = await supabase.functions.invoke("voting", {
         body: {
+          action: "vote",
           voting_event_id: votingEventId,
           vote_option: voteOption,
         },
