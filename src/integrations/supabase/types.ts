@@ -239,21 +239,27 @@ export type Database = {
           created_at: string
           full_name: string | null
           id: string
+          login_method: string | null
           updated_at: string
+          username: string | null
           wallet_address: string | null
         }
         Insert: {
           created_at?: string
           full_name?: string | null
           id: string
+          login_method?: string | null
           updated_at?: string
+          username?: string | null
           wallet_address?: string | null
         }
         Update: {
           created_at?: string
           full_name?: string | null
           id?: string
+          login_method?: string | null
           updated_at?: string
+          username?: string | null
           wallet_address?: string | null
         }
         Relationships: []
